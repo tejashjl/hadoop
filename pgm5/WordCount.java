@@ -35,15 +35,15 @@ public class WordCount {
         public void map(Object key, Text value, Context context
         ) throws IOException, InterruptedException {
             StringTokenizer itr = new StringTokenizer(value.toString());
-            int count=0;
-            int length=0;
+            int count = 0;
+            int length = 0;
             while (itr.hasMoreTokens()) {
                 String str = itr.nextToken();
                 word.set(str);
                 int currentIndex = Integer.parseInt(key.toString()) + length;
-                fileName.set(filename+"-"+currentIndex);
+                fileName.set(filename + "-" + currentIndex);
                 context.write(word, fileName);
-                length+=str.length()+1;
+                length += str.length() + 1;
             }
         }
     }
@@ -56,28 +56,39 @@ public class WordCount {
                            Context context
         ) throws IOException, InterruptedException {
             HashMap map = new HashMap();
-            
-            
+            HashMap occurrenceMap = new HashMap();
+
+
             for (Text val : values) {
                 String value[] = val.toString().split("-");
                 String fname = value[0];
                 String position = value[1];
                 if (map != null && map.get(fname) != null) {
 
-                    String otherPositions =  map.get(fname).toString();
-
-                    map.put(fname, position+"-"+otherPositions);
+                    String otherPositions = map.get(fname).toString();
+                    map.put(fname, position + "-" + otherPositions);
+                    int occurrences = (int) occurrenceMap.get(fname);
+                    occurrenceMap.put(fname, ++occurrences);
 
                 } else {
-
-
                     map.put(fname, position);
+                    occurrenceMap.put(fname, 1);
 
                 }
 
             }
-            
-            result.set("" + map.toString());
+            String finalValue = "{";
+            Set<String> set = map.keySet();
+            int count =0;
+            for (String name : set) {
+                finalValue += "" + name + " occurrences: " + occurrenceMap.get(name) + " positions: " + map.get(name) ;
+                count++;
+                if(count<set.size()){
+                    finalValue += " , ";
+                }
+            }
+            finalValue += "}";
+            result.set(finalValue);
             context.write(key, result);
         }
     }
