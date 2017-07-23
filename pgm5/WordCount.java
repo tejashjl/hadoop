@@ -36,10 +36,14 @@ public class WordCount {
         ) throws IOException, InterruptedException {
             StringTokenizer itr = new StringTokenizer(value.toString());
             int count=0;
+            int length=0;
             while (itr.hasMoreTokens()) {
-                word.set(itr.nextToken());
-                fileName.set(filename);
+                String str = itr.nextToken();
+                word.set(str);
+                int currentIndex = Integer.parseInt(key.toString()) + length;
+                fileName.set(filename+"-"+currentIndex);
                 context.write(word, fileName);
+                length+=str.length()+1;
             }
         }
     }
@@ -51,14 +55,29 @@ public class WordCount {
         public void reduce(Text key, Iterable<Text> values,
                            Context context
         ) throws IOException, InterruptedException {
-            int sum = 0;
-            Set<String> set = new LinkedHashSet<>();
+            HashMap map = new HashMap();
+            
+            
             for (Text val : values) {
-                set.add(val.toString());
+                String value[] = val.toString().split("-");
+                String fname = value[0];
+                String position = value[1];
+                if (map != null && map.get(fname) != null) {
+
+                    String otherPositions =  map.get(fname).toString();
+
+                    map.put(fname, position+"-"+otherPositions);
+
+                } else {
+
+
+                    map.put(fname, position);
+
+                }
+
             }
-            List sortedList = new ArrayList(set);
-            Collections.sort(sortedList);
-            result.set("" + sortedList.toString());
+            
+            result.set("" + map.toString());
             context.write(key, result);
         }
     }
